@@ -38,7 +38,7 @@
                   </el-col>
                   <el-col :span="18">
                     <el-tag type="warning" v-for="(item3, i3) in item2.children"
-                    :key="item3.id" closable
+                            :key="item3.id" closable
                     @close="removeRightById(scope.row,item3.id)">{{item3.authName}}</el-tag>
                   </el-col>
                 </el-row>
@@ -54,7 +54,7 @@
           <template slot-scope="scope">
             <el-button size="mini" type="primary" icon="el-icon-edit" @click="showEditDialog(scope.row.id)">编辑</el-button>
             <el-button size="mini" type="danger" icon="el-icon-delete" @click="removeRoleById(scope.row.id)">删除</el-button>
-            <el-button size="mini" type="waring" icon="el-icon-setting" @click="showSetRightDialog">分配权限</el-button>
+            <el-button size="mini" type="waring" icon="el-icon-setting" @click="showSetRightDialog(scope.row)">分配权限</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -63,12 +63,13 @@
     <el-dialog
       title="分配权限"
       :visible.sync="setRightdialogVisible"
-      width="50%">
+      width="50%" @close="setRightDialogClosed">
       <!--树形控件-->
-      <el-tree :data="rightlist" :props="treeProps"></el-tree>
+      <el-tree :data="rightlist" :props="treeProps" show-checkbox
+               node-key="id" default-expand-all="true" :default-checked-keys="defKeys" ref="treeRef"></el-tree>
       <span slot="footer" class="dialog-footer">
     <el-button @click="setRightdialogVisible = false">取 消</el-button>
-    <el-button type="primary" @click="setRightdialogVisible = false">确 定</el-button>
+    <el-button type="primary" @click="allotRights">确 定</el-button>
   </span>
     </el-dialog>
     <!--添加角色弹窗-->
@@ -142,6 +143,10 @@ export default {
         label: 'authName',
         children: 'children'
       },
+      // 默认选中的节点id值数组
+      defKeys: [],
+      // 当前即将分配权限的角色id
+      roleId: '',
       // 添加角色的规则
       addFormrules: {
         roleName: [
@@ -288,7 +293,8 @@ export default {
       role.children = res.data
     },
     // 展示分配权限的对话框
-    async showSetRightDialog () {
+    async showSetRightDialog (role) {
+      this.roleId = role.id
       // 获取所有权限的数据
       const {data: res} = await this.$http.get('rights/tree')
       if (res.meta.status !== 200) {
@@ -298,7 +304,38 @@ export default {
       this.rightlist = res.data
       console.log(this.rightlist)
       console.log('获取权限成功')
+      // 递归获取三级节点的id
+      this.getLeafKeys(role, this.defKeys)
       this.setRightdialogVisible = true
+    },
+    // 通过递归的形式获取角色下所有的三级权限的id，并保存到数组中。
+    getLeafKeys (node, arr) {
+      // 如果当前节点不把包含children属性，则是三级节点
+      if (!node.children) {
+        return arr.push(node.id)
+      }
+      node.children.forEach(item =>
+        this.getLeafKeys(item, arr))
+    },
+    // 监听分配权限对话框的关闭事件
+    setRightDialogClosed () {
+      this.defKeys = []
+    },
+    // 点击为角色分配权限。
+    async allotRights () {
+      const keys = [
+        ...this.$refs.treeRef.getCheckedKeys(),
+        ...this.$refs.treeRef.getHalfCheckedKeys()
+      ]
+      // 下面这句话，把逗号写成了点，会出现逻辑错误。
+      const idStr = keys.join(',')
+      const {data: res} = await this.$http.post(`roles/${this.roleId}/rights`, {rids: idStr})
+      if (res.meta.status !== 200) {
+        return this.$message.error('分配权限失败!')
+      }
+      this.$message.success('分配权限成功!')
+      this.getRolesList()
+      this.setRightdialogVisible = false
     }
   }
 }
