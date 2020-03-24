@@ -3,7 +3,7 @@
     <!--面包屑导航区-->
     <el-breadcrumb separator="/">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item><a href="/">用户管理</a></el-breadcrumb-item>
+      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
       <el-breadcrumb-item>用户列表</el-breadcrumb-item>
     </el-breadcrumb>
     <!--卡片视图区-->
@@ -399,7 +399,7 @@ export default {
         return this.$message.error('请选择要分配的角色！')
       }
       const {data: res} = await this.$http.put(
-        `users/${this.userInfo.id}/role`,{rid:this.selectedRoleId})
+        `users/${this.userInfo.id}/role`, {rid: this.selectedRoleId})
       if (res.meta.status !== 200) {
         return this.$message.error('更新角色失败！')
       }
@@ -407,10 +407,10 @@ export default {
       this.getUserList()
       this.setRoleDialogVisible = false
     },
-    //监听分配角色对话框的关闭事件
+    // 监听分配角色对话框的关闭事件
     setRoleDialogClosed () {
       this.selectedRoleId = ''
-      this.userInfo= ''
+      this.userInfo = ''
     }
   }
 }
