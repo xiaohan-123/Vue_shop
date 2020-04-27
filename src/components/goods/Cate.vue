@@ -232,7 +232,7 @@ export default {
         this.addCateForm.cat_pid = this.selectedKeys[this.selectedKeys.length - 1]
         // 为当前分类的等级赋值
         this.addCateForm.cat_level = this.selectedKeys.length
-        return
+        // return
       } else {
         this.addCateForm.cat_pid = 0
         // 为当前分类的等级赋值
